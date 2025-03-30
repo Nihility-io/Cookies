@@ -1,13 +1,13 @@
 {
 	"name": "@nihility-io/cookies",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"exports": "./mod.ts",
 	"lock": true,
 	"tasks": {},
 	"imports": {
 		"js-cookie": "npm:js-cookie@^3.0.5",
-		"preact": "npm:preact@^10.25.2",
-		"preact/": "npm:/preact@^10.25.2/"
+		"preact": "npm:preact@^10.26.4",
+		"preact/": "npm:/preact@^10.26.4/"
 	},
 	"lint": {
 		"rules": {

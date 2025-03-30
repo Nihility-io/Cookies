@@ -59,16 +59,24 @@ export interface CookieOptions {
  * It uses js-cookie under the hood
  */
 export class Cookies {
-	// Log interceptions if set to true
+	/**
+	 * Log interceptions if set to true
+	 */
 	public static debug = false
 
-	// Stores all subscribers for specific cookie names
+	/**
+	 * Stores all subscribers for specific cookie names
+	 */
 	static #subscribers: Record<string, CookieSubscriber[]> = {}
 
-	// Keeps track if the interceptor has already been installed
+	/**
+	 * Keeps track if the interceptor has already been installed
+	 */
 	static #isIntercepting = false
 
-	// Intercepts calls to document.cookie in order to notify subscribers
+	/**
+	 * Intercepts calls to document.cookie in order to notify subscribers
+	 */
 	static #startIntercepting() {
 		// Return if the interceptor is ready installed
 		if (this.#isIntercepting) {
