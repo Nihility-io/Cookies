@@ -26,7 +26,7 @@ export function useCookie<T>(name: string, defaultValue: T, options: CookieOptio
 		return () => {
 			unsubscribe()
 		}
-	}, [defaultValue])
+	}, [typeof defaultValue === "object" ? JSON.stringify(defaultValue) : defaultValue])
 
 	// Cookie setter
 	const setter = (newValue: T) => {
