@@ -1,8 +1,8 @@
 # Cookies
-Wrapper around [js-cookie](https://github.com/js-cookie/js-cookie) that provides extra functionality like serialization, listening for cookie changes and storing preact state in cookies.
+Wrapper around [js-cookie](https://github.com/js-cookie/js-cookie) that provides extra functionality like listening for cookie changes and storing preact state in cookies.
 
 ## Working with Cookies
-This library allows you to store any JSON-serializable value inside cookie.
+This library allows you to store string, number and boolean values inside cookies and automatically detects the type when reading a cookie.
 
 ### Example
 ```tsx
@@ -15,13 +15,16 @@ interface Person {
 }
 
 // Saving to cookies
-Cookies.set("my-simple-cookie", "Hello World!")
-Cookies.set("my-cookie", { givenName: "John", surname: "Smith", age: 20 })
+Cookies.set("my-cookie-1", "Hello World!")
+Cookies.set("my-cookie-2", 5)
+Cookies.set("my-cookie-3", true)
 
 // Reading from cookies (with optional default value)
-Cookies.get<string>("my-simple-cookie", "some default") // => string
-Cookies.get<Person>("my-cookie", Cookies.ObjectValue) // => Person | undefined
-Cookies.get<Person>("my-cookie", { givenName: "John", surname: "Smith", age: 20 }) // => Person
+Cookies.get<string>("my-cookie-1") // => String("Hello World!")
+Cookies.get<number>("my-cookie-2") // => Number(5)
+Cookies.get<boolean>("my-cookie-3") // => Boolean(true)
+Cookies.get("my-cookie-4", "Hi") // => String("Hi")
+Cookies.get("my-cookie-5") // => undefined
 
 // Setting a cookie to undefined deletes the cookie
 Cookies.remove("my-simple-cookie")
@@ -52,12 +55,13 @@ unsubscribe()
 import { useCookie } from "jsr:@nihility-io/use-cookie"
 
 export const MyComponent = () => {
-	const [myCookie, setMyCookie] = useCookie("my-cookie", { givenName: "John", surname: "Smith", age: 20 })
+	const [name, setName] = useCookie("name", "John Smith")
+	const [age, setAge] = useCookie("age", 20)
 	return (
 		<div class="w-full p-4">
-			<p>Name: {myCookie.givenName} {myCookie.surname}</p>
-			<p>Age:  {myCookie.age}</p>
-			<Button label="Age 1 Year" onSubmit={() => setMyCookie({ ...myCookie, age: myCookie + 1})} />
+			<p>Name: {name}</p>
+			<p>Age:  {age}</p>
+			<Button label="Age 1 Year" onSubmit={() => setAge(age + 1)} />
 		</div>
 	)
 }

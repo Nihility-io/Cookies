@@ -1,22 +1,15 @@
 // @deno-types="npm:@types/js-cookie@3.0.6"
 import JSCookies from "js-cookie"
 
-export const StringValue = Symbol("CookieStringValue")
-export const NumberValue = Symbol("CookieNumberValue")
-export const BooleanValue = Symbol("CookieBooleanValue")
-export const ObjectValue = Symbol("CookieObjectValue")
-
-export type CookieValue =
-	| typeof StringValue
-	| typeof NumberValue
-	| typeof BooleanValue
-	| typeof ObjectValue
-
+/**
+ * JavaScript primitive type
+ */
+export type PrimitiveType = string | number | boolean
 
 /**
  * Function that called whenever a change to the specified cookie occurs
  */
-type CookieSubscriber<T = unknown> = (value: T, oldValue?: T) => void
+type CookieSubscriber = (value?: PrimitiveType, oldValue?: PrimitiveType) => void
 
 /**
  * Functions that removes a subscriber
@@ -87,11 +80,11 @@ export class Cookies {
 	static #isIntercepting = false
 
 	/**
-	 * Convert a give value to a string representation
+	 * Convert a boolean, number or string into a string
 	 * @param value Value
 	 * @returns String value
 	 */
-	static #toCookieValue<T>(value: T): string {
+	static #toCookieValue<T extends PrimitiveType>(value: T): string {
 		switch (typeof value) {
 			case "string":
 				return value
@@ -105,26 +98,21 @@ export class Cookies {
 	}
 
 	/**
-	 * Converts a cookie value into the given type
+	 * Converts a cookie string value into boolean, number or string
 	 * @param value String value
-	 * @param defaultValueOrType Type or default value to convert to
 	 * @returns Converted value
 	 */
-	static #fromCookieValue<T>(value: string, defaultValueOrType: CookieValue | unknown): T | undefined {
-		try {
-			if (defaultValueOrType === StringValue || typeof defaultValueOrType === "string") {
-				return value as T
-			} else if (defaultValueOrType === NumberValue || typeof defaultValueOrType === "number") {
-				return +value as T
-			} else if (defaultValueOrType === BooleanValue || typeof defaultValueOrType === "boolean") {
-				return (value.toLowerCase() === "true") as T
-			} else if (defaultValueOrType === ObjectValue || typeof defaultValueOrType === "object") {
-				return JSON.parse(value)
-			} else {
-				return value as T
-			}
-		} catch {
+	static #fromCookieValue(value?: string): PrimitiveType | undefined {
+		if (value === undefined || value === null) {
 			return undefined
+		} else if (value === "true") {
+			return true
+		} else if (value === "false") {
+			return false
+		} else if (/^-?\d+(\.\d+)?$/.test(value)) {
+			return +value
+		} else {
+			return value
 		}
 	}
 
@@ -176,13 +164,13 @@ export class Cookies {
 				const name = value.substring(0, value.indexOf("="))
 
 				// Get the old cookie value
-				const oldValue = Cookies.get(name, null as unknown)
+				const oldValue = Cookies.get(name)
 
 				// Write the cookie using the original function
 				setCookie(value)
 
 				// Get the new cookie value
-				const newValue = Cookies.get(name, null as unknown)
+				const newValue = Cookies.get(name)
 
 				// Log interception
 				if (Cookies.debug) {
@@ -207,12 +195,7 @@ export class Cookies {
 	 * @param f Subscriber function
 	 * @returns Unsubscribe function
 	 */
-	public static subscribe(name: string, f: CookieSubscriber<string>): CookieUnsubscriber
-	public static subscribe(name: string, f: CookieSubscriber<string>, type: typeof StringValue): CookieUnsubscriber
-	public static subscribe(name: string, f: CookieSubscriber<number>, type?: typeof NumberValue): CookieUnsubscriber
-	public static subscribe(name: string, f: CookieSubscriber<boolean>, type?: typeof BooleanValue): CookieUnsubscriber
-	public static subscribe<T>(name: string, f: CookieSubscriber<T>, type?: typeof ObjectValue): CookieUnsubscriber
-	public static subscribe<T>(name: string, f: CookieSubscriber<T>, type?: CookieValue): CookieUnsubscriber {
+	public static subscribe(name: string, f: CookieSubscriber): CookieUnsubscriber {
 		// Start interception cookie writes once the first subscriber is added
 		Cookies.#startIntercepting()
 
@@ -221,20 +204,11 @@ export class Cookies {
 			Cookies.#subscribers[name] = []
 		}
 
-		const ff: CookieSubscriber<string> = type === undefined
-			? f as CookieSubscriber<string>
-			: (value: string, oldValue?: string) => {
-				return f(
-					Cookies.#fromCookieValue<T>(value, type ?? StringValue)!,
-					oldValue ? Cookies.#fromCookieValue<T>(oldValue, type ?? StringValue) : undefined,
-				)
-			}
-
-		Cookies.#subscribers[name].push(ff as CookieSubscriber<unknown>)
+		Cookies.#subscribers[name].push(f)
 
 		// Returns an unsubscribe function
 		return () => {
-			Cookies.#subscribers[name].splice(Cookies.#subscribers[name].indexOf(ff as CookieSubscriber<unknown>))
+			Cookies.#subscribers[name].splice(Cookies.#subscribers[name].indexOf(f))
 		}
 	}
 
@@ -244,44 +218,29 @@ export class Cookies {
 	 * @param defaultValue Default value if the cookie does not exist
 	 * @returns Parsed cookie value or default value if the cookie does not exist
 	 */
-	public static get(name: string): string | undefined
-	public static get(name: string, type: typeof StringValue): string | undefined
-	public static get(name: string, type: typeof NumberValue): number | undefined
-	public static get(name: string, type: typeof BooleanValue): boolean | undefined
-	public static get<T>(name: string, type: typeof ObjectValue): T | undefined
-	public static get<T>(name: string, defaultValue: T): T
-	public static get<T>(name: string, defaultValueOrType?: T | CookieValue): T | string | undefined {
+	public static get(name: string): PrimitiveType | undefined
+	public static get(name: string, defaultValue: string): string
+	public static get(name: string, defaultValue: number): number
+	public static get(name: string, defaultValue: boolean): boolean
+	public static get<T extends PrimitiveType>(name: string, defaultValue: T): T
+	public static get<T>(name: string, defaultValue?: T): T | PrimitiveType | undefined {
 		const res = JSCookies.get(name)
-		console.debug(`[Cookie]:`, { name, value: res, argument: defaultValueOrType, action: "get" })
-
-		const isTypeSymbol = defaultValueOrType === StringValue || defaultValueOrType === NumberValue ||
-			defaultValueOrType === BooleanValue || defaultValueOrType === ObjectValue
 
 		// Return the default value if cookie was not found
 		if (res === undefined) {
-			return isTypeSymbol ? undefined : defaultValueOrType as T
+			return defaultValue
 		}
 
-		if (defaultValueOrType === undefined || defaultValueOrType == null) {
-			return res
-		}
-
-		const finalRes = Cookies.#fromCookieValue<T>(res, defaultValueOrType)
-
-		if (finalRes !== undefined) {
-			return finalRes
-		}
-
-		return isTypeSymbol ? undefined : defaultValueOrType as T
+		return Cookies.#fromCookieValue(res)
 	}
 
 	/**
 	 * Writes a cookie with a give name.
 	 * @param name Cookie name
-	 * @param value Cookie value as a string or as a JSON serializable object
+	 * @param value Cookie value
 	 * @param options Cookie options
 	 */
-	public static set<T>(name: string, value: T, options: CookieOptions = {}) {
+	public static set<T extends PrimitiveType>(name: string, value: T, options: CookieOptions = {}) {
 		if (value === undefined) {
 			Cookies.remove(name, options)
 			return

@@ -1,20 +1,5 @@
 import { Dispatch, useEffect, useState } from "preact/hooks"
-import { BooleanValue, CookieOptions, Cookies, CookieValue, NumberValue, ObjectValue, StringValue } from "./cookies.ts"
-
-const cookieValueFromDefaultValue = (value: unknown): CookieValue => {
-	switch (typeof value) {
-		case "string":
-			return StringValue
-		case "number":
-			return NumberValue
-		case "boolean":
-			return BooleanValue
-		case "object":
-			return ObjectValue
-		default:
-			return StringValue
-	}
-}
+import { CookieOptions, Cookies, PrimitiveType } from "./cookies.ts"
 
 /**
  * Creates a preact state that stores the value inside a cookie. useCookie updates in response
@@ -27,8 +12,12 @@ const cookieValueFromDefaultValue = (value: unknown): CookieValue => {
 export function useCookie(name: string, defaultValue: string, options?: CookieOptions): [string, Dispatch<string>]
 export function useCookie(name: string, defaultValue: number, options?: CookieOptions): [number, Dispatch<number>]
 export function useCookie(name: string, defaultValue: boolean, options?: CookieOptions): [boolean, Dispatch<boolean>]
-export function useCookie<T>(name: string, defaultValue: T, options: CookieOptions): [T, Dispatch<T>]
-export function useCookie<T>(
+export function useCookie<T extends PrimitiveType>(
+	name: string,
+	defaultValue: T,
+	options?: CookieOptions,
+): [T, Dispatch<T>]
+export function useCookie<T extends PrimitiveType>(
 	name: string,
 	defaultValue: T,
 	options: CookieOptions = { expires: 3650 },
@@ -41,9 +30,9 @@ export function useCookie<T>(
 		setResult(Cookies.get(name, defaultValue))
 
 		// Subscribe to changes to the cookie and update the state if changes are detected
-		const unsubscribe = Cookies.subscribe<T>(name, (newValue) => {
-			setResult(newValue)
-		}, cookieValueFromDefaultValue(defaultValue) as any)
+		const unsubscribe = Cookies.subscribe(name, (newValue) => {
+			setResult(newValue as T)
+		})
 
 		// Unsubscribe on cleanup
 		return () => {
