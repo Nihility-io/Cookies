@@ -1,6 +1,6 @@
 {
 	"name": "@nihility-io/cookies",
-	"version": "2.0.0-alpha.4",
+	"version": "2.0.0-alpha.5",
 	"exports": "./mod.ts",
 	"lock": true,
 	"tasks": {},
