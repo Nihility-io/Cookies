@@ -194,6 +194,7 @@ export class Cookies {
 	public static get<T>(name: string, defaultValue: T): T
 	public static get<T>(name: string, defaultValueOrType?: T | CookieValue): T | string | undefined {
 		const res = JSCookies.get(name)
+		console.debug(`[Cookie]:`, { name, value: res, argument: defaultValueOrType, action: "get" })
 
 		const isTypeSymbol = defaultValueOrType === StringValue || defaultValueOrType === NumberValue ||
 			defaultValueOrType === BooleanValue || defaultValueOrType === ObjectValue
@@ -232,6 +233,7 @@ export class Cookies {
 	 * @param options Cookie options
 	 */
 	public static set<T>(name: string, value: T, options: CookieOptions = {}) {
+		console.debug(`[Cookie]:`, { name, value, action: "set" })
 		if (value === undefined) {
 			Cookies.remove(name, options)
 			return
