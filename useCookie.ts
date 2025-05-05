@@ -1,5 +1,20 @@
 import { Dispatch, useEffect, useState } from "preact/hooks"
-import { CookieOptions, Cookies } from "./cookies.ts"
+import { BooleanValue, CookieOptions, Cookies, CookieValue, NumberValue, ObjectValue, StringValue } from "./cookies.ts"
+
+const cookieValueFromDefaultValue = (value: unknown): CookieValue => {
+	switch (typeof value) {
+		case "string":
+			return StringValue
+		case "number":
+			return NumberValue
+		case "boolean":
+			return BooleanValue
+		case "object":
+			return ObjectValue
+		default:
+			return StringValue
+	}
+}
 
 /**
  * Creates a preact state that stores the value inside a cookie. useCookie updates in response
@@ -28,7 +43,7 @@ export function useCookie<T>(
 		// Subscribe to changes to the cookie and update the state if changes are detected
 		const unsubscribe = Cookies.subscribe<T>(name, (newValue) => {
 			setResult(newValue)
-		})
+		}, cookieValueFromDefaultValue(defaultValue) as any)
 
 		// Unsubscribe on cleanup
 		return () => {

@@ -12,6 +12,7 @@ export type CookieValue =
 	| typeof BooleanValue
 	| typeof ObjectValue
 
+
 /**
  * Function that called whenever a change to the specified cookie occurs
  */
