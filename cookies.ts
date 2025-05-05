@@ -220,7 +220,8 @@ export class Cookies {
 				return res
 			}
 		} catch (e) {
-			console.error(`[Cookie(${name})]: ${e}`)
+			//console.error(`[Cookie(${name})]: ${e}`)
+			console.error(`[Cookie(${name})]: ${e}`, { name, value: res, argument: defaultValueOrType })
 			return isTypeSymbol ? undefined : defaultValueOrType as T
 		}
 	}
