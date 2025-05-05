@@ -1,6 +1,17 @@
 // @deno-types="npm:@types/js-cookie@3.0.6"
 import JSCookies from "js-cookie"
 
+export const StringValue = Symbol("CookieStringValue")
+export const NumberValue = Symbol("CookieNumberValue")
+export const BooleanValue = Symbol("CookieBooleanValue")
+export const ObjectValue = Symbol("CookieObjectValue")
+
+export type CookieValue =
+	| typeof StringValue
+	| typeof NumberValue
+	| typeof BooleanValue
+	| typeof ObjectValue
+
 /**
  * Function that called whenever a change to the specified cookie occurs
  */
@@ -171,33 +182,51 @@ export class Cookies {
 
 	/**
 	 * Reads and parse a cookie with a given name.
-	 * Note: Cookie values prefixed with "json:" will be parsed using JSON.parse
 	 * @param name Cookie name
 	 * @param defaultValue Default value if the cookie does not exist
 	 * @returns Parsed cookie value or default value if the cookie does not exist
 	 */
-	public static get<T>(name: string): T | undefined
+	public static get(name: string): string | undefined
+	public static get(name: string, type: typeof StringValue): string | undefined
+	public static get(name: string, type: typeof NumberValue): number | undefined
+	public static get(name: string, type: typeof BooleanValue): boolean | undefined
+	public static get<T>(name: string, type: typeof ObjectValue): T | undefined
 	public static get<T>(name: string, defaultValue: T): T
-	public static get<T>(name: string, defaultValue?: T): T | undefined {
+	public static get<T>(name: string, defaultValueOrType?: T | CookieValue): T | string | undefined {
 		const res = JSCookies.get(name)
+
+		const isTypeSymbol = defaultValueOrType === StringValue || defaultValueOrType === NumberValue ||
+			defaultValueOrType === BooleanValue || defaultValueOrType === ObjectValue
 
 		// Return the default value if cookie was not found
 		if (res === undefined) {
-			return defaultValue
+			return isTypeSymbol ? undefined : defaultValueOrType as T
 		}
 
-		// Parse cookies that as serialized
-		if (res.startsWith("json:")) {
-			return JSON.parse(res.slice(5))
+		if (defaultValueOrType === undefined) {
+			return res
 		}
 
-		return res as unknown as T
+		try {
+			if (defaultValueOrType === StringValue || typeof defaultValueOrType === "string") {
+				return res
+			} else if (defaultValueOrType === NumberValue || typeof defaultValueOrType === "number") {
+				return +res as T
+			} else if (defaultValueOrType === BooleanValue || typeof defaultValueOrType === "boolean") {
+				return (res.toLowerCase() === "true") as T
+			} else if (defaultValueOrType === ObjectValue || typeof defaultValueOrType === "object") {
+				return JSON.parse(res)
+			} else {
+				return res
+			}
+		} catch (e) {
+			console.error(`[Cookie]: ${e}`)
+			return isTypeSymbol ? undefined : defaultValueOrType as T
+		}
 	}
 
 	/**
 	 * Writes a cookie with a give name.
-	 * Note: If a non-string value is given it is serialized using JSON.stringify and
-	 * prefixed with "json:" in order to distinguish it from normal cookies.
 	 * @param name Cookie name
 	 * @param value Cookie value as a string or as a JSON serializable object
 	 * @param options Cookie options
@@ -205,11 +234,23 @@ export class Cookies {
 	public static set<T>(name: string, value: T, options: CookieOptions = {}) {
 		if (value === undefined) {
 			Cookies.remove(name, options)
-		} else if (typeof value === "string") {
-			JSCookies.set(name, value, options)
-		} else {
-			JSCookies.set(name, `json:${JSON.stringify(value)}`, options)
+			return
 		}
+
+		const res = (() => {
+			switch (typeof value) {
+				case "string":
+					return value
+				case "number":
+					return `${value}`
+				case "boolean":
+					return value ? "true" : "false"
+				default:
+					return JSON.stringify(value)
+			}
+		})()
+
+		JSCookies.set(name, res, options)
 	}
 
 	/**

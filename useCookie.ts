@@ -1,4 +1,4 @@
-import { useEffect, useState } from "preact/hooks"
+import { Dispatch, useEffect, useState } from "preact/hooks"
 import { CookieOptions, Cookies } from "./cookies.ts"
 
 /**
@@ -6,10 +6,18 @@ import { CookieOptions, Cookies } from "./cookies.ts"
  * to external cookie updates
  * @param name Cookie name
  * @param defaultValue Default value if the cookie does not exist
- * @param options Cookie options
+ * @param options Cookie options (Cookie expires after 10 years by default)
  * @returns Current cookie value
  */
-export function useCookie<T>(name: string, defaultValue: T, options: CookieOptions = {}): [T, (v: T) => void] {
+export function useCookie(name: string, defaultValue: string, options?: CookieOptions): [string, Dispatch<string>]
+export function useCookie(name: string, defaultValue: number, options?: CookieOptions): [number, Dispatch<number>]
+export function useCookie(name: string, defaultValue: boolean, options?: CookieOptions): [boolean, Dispatch<boolean>]
+export function useCookie<T>(name: string, defaultValue: T, options: CookieOptions): [T, Dispatch<T>]
+export function useCookie<T>(
+	name: string,
+	defaultValue: T,
+	options: CookieOptions = { expires: 3650 },
+): [T, Dispatch<T>] {
 	// Create a preact state with the default value
 	const [result, setResult] = useState<T>(defaultValue)
 

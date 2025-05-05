@@ -20,7 +20,8 @@ Cookies.set("my-cookie", { givenName: "John", surname: "Smith", age: 20 })
 
 // Reading from cookies (with optional default value)
 Cookies.get<string>("my-simple-cookie", "some default") // => string
-Cookies.get<Person>("my-cookie") // => Person | undefined
+Cookies.get<Person>("my-cookie", Cookies.ObjectValue) // => Person | undefined
+Cookies.get<Person>("my-cookie", { givenName: "John", surname: "Smith", age: 20 }) // => Person
 
 // Setting a cookie to undefined deletes the cookie
 Cookies.remove("my-simple-cookie")
