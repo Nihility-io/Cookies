@@ -119,7 +119,7 @@ export class Cookies {
 	/**
 	 * Intercepts calls to document.cookie in order to notify subscribers
 	 */
-	static #startIntercepting() {
+	static #startIntercepting(): void {
 		// Return if the interceptor is ready installed
 		if (this.#isIntercepting) {
 			return
@@ -131,9 +131,9 @@ export class Cookies {
 		}
 
 		// Save the original cookie functionality
-		const original = Object.getOwnPropertyDescriptor(Document.prototype, "cookie")!
-		const getCookie = original.get?.bind(document)!
-		const setCookie = original.set?.bind(document)!
+		const original = Object.getOwnPropertyDescriptor(globalThis.Document.prototype, "cookie")!
+		const getCookie = original.get?.bind(globalThis.document)!
+		const setCookie = original.set?.bind(globalThis.document)!
 
 		// If the descriptor is not configurable, interception won't work
 		if (!original.configurable) {
@@ -148,13 +148,13 @@ export class Cookies {
 		}
 
 		// Install the interceptor
-		Object.defineProperty(document, "cookie", {
+		Object.defineProperty(globalThis.document, "cookie", {
 			configurable: true,
 			// Do not intercept cookie reading
 			get: getCookie,
 
 			// Intercept cookie writing
-			set: function setter(value: string) {
+			set: function (value: string): void {
 				// Ignore invalid values
 				if (!value.includes("=")) {
 					return setCookie(value)
@@ -240,7 +240,7 @@ export class Cookies {
 	 * @param value Cookie value
 	 * @param options Cookie options
 	 */
-	public static set<T extends PrimitiveType>(name: string, value: T, options: CookieOptions = {}) {
+	public static set<T extends PrimitiveType>(name: string, value: T, options: CookieOptions = {}): void {
 		if (value === undefined) {
 			Cookies.remove(name, options)
 			return
@@ -254,7 +254,7 @@ export class Cookies {
 	 * @param name Cookie name
 	 * @param options Cookie options
 	 */
-	public static remove(name: string, options: CookieOptions = {}) {
+	public static remove(name: string, options: CookieOptions = {}): void {
 		JSCookies.remove(name, options)
 	}
 }

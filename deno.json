@@ -1,6 +1,6 @@
 {
 	"name": "@nihility-io/cookies",
-	"version": "2.0.0-alpha.7",
+	"version": "2.0.0-alpha.8",
 	"exports": "./mod.ts",
 	"lock": true,
 	"tasks": {},
@@ -11,9 +11,28 @@
 	},
 	"lint": {
 		"rules": {
-			"tags": [
-				"fresh",
-				"recommended"
+			"tags": ["recommended", "jsr"],
+			"include": [
+				"jsx-button-has-type",
+				"camelcase",
+				"default-param-last",
+				"eqeqeq",
+				"explicit-function-return-type",
+				"explicit-module-boundary-types",
+				"no-const-assign",
+				"no-eval",
+				"no-external-import",
+				"no-inferrable-types",
+				"no-self-compare",
+				"no-sparse-arrays",
+				"no-sync-fn-in-async-fn",
+				"no-throw-literal",
+				"no-undef",
+				"no-useless-rename",
+				"single-var-declarator"
+			],
+			"exclude": [
+				"verbatim-module-syntax"
 			]
 		}
 	},
